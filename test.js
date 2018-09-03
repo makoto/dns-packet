@@ -399,16 +399,51 @@ tape('rrsig', function (t) {
   t.end()
 })
 
+
+
 tape('nsec', function (t) {
   testEncoder(t, packet.nsec, {
     nextDomain: 'foo.com',
     rrtypes: ['A', 'DNSKEY', 'CAA', 'DLV']
   })
 
+  // passes
+  testEncoder(t, packet.nsec, {
+    nextDomain: 'foo.com',
+    rrtypes: ['TXT']  // 16
+  })
+
+  testEncoder(t, packet.nsec, {
+    nextDomain: 'foo.com',
+    rrtypes: ['TKEY'] // 249
+  })
+
+  testEncoder(t, packet.nsec, {
+    nextDomain: 'foo.com',
+    rrtypes: ['TKEY'] // 16 + 249
+  })
+
+  testEncoder(t, packet.nsec, {
+    nextDomain: 'foo.com',
+    rrtypes: ['RRSIG', 'NSEC']
+  })
+
+  // fails
+  testEncoder(t, packet.nsec, {
+    nextDomain: 'foo.com',
+    rrtypes: ['TXT', 'RRSIG']
+  })
+
+  testEncoder(t, packet.nsec, {
+    nextDomain: 'foo.com',
+    rrtypes: ['TXT', 'NSEC']
+  })
+
   // Test with the sample NSEC from https://tools.ietf.org/html/rfc4034#section-4.3
   var sampleNSEC = Buffer.from('003704686f7374076578616d706c6503636f6d00' +
       '0006400100000003041b000000000000000000000000000000000000000000000' +
       '000000020', 'hex')
+
   var decoded = packet.nsec.decode(sampleNSEC)
   t.ok(compare(t, decoded, {
     nextDomain: 'host.example.com',
@@ -419,6 +454,7 @@ tape('nsec', function (t) {
   t.same(sampleNSEC, reencoded)
   t.end()
 })
+
 
 tape('nsec3', function (t) {
   testEncoder(t, packet.nsec3, {
